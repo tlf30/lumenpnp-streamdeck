@@ -1,0 +1,11 @@
+# Keep pinned GitHub Actions updated via reviewed Dependabot PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

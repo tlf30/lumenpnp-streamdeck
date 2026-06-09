@@ -70,7 +70,7 @@ Version: ${VERSION}
 Section: misc
 Priority: optional
 Architecture: ${ARCH}
-Depends: python3 (>= 3.10), python3-venv, python3-pip, libhidapi-libusb0, systemd | systemd-standalone
+Depends: python3 (>= 3.10), python3-venv, python3-pip, libhidapi-libusb0, libnotify-bin, systemd | systemd-standalone
 Maintainer: LumenPNP <support@lumenpnp.com>
 Description: Stream Deck + XL controller for OpenPnP / LumenPNP
  Installs the Stream Deck controller service, OpenPnP bridge startup script,

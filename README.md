@@ -138,7 +138,7 @@ Optional `notify-send` popups for lock/unlock, idle lock, bridge offline, blocke
 - `libhidapi-libusb0`
 - `python3-venv`, `python3-pip`
 - OpenPnP with a configured machine (actuator names `VAC1` / `VAC2` expected for vacuum keys)
-- Desktop: `libnotify-bin` (`notify-send`) for notifications — optional
+- Desktop: `libnotify-bin` (`notify-send`) for notifications (installed as a package dependency)
 
 ---
 
@@ -366,7 +366,7 @@ See [HID-NOTES.md](HID-NOTES.md) for protocol details.
 | `OpenPnP bridge not running` | Restart OpenPnP; confirm `Startup.py` symlink |
 | First button press missed | Ensure only one HID client is running; use current controller (HID read/write decoupling fix) |
 | Permission denied on `/dev/hidraw*` | Run `sudo udevadm control --reload-rules && sudo udevadm trigger`; replug |
-| Notifications silent | Install `libnotify-bin`; check `notifications_enabled` |
+| Notifications silent | Check `notifications_enabled`; verify `notify-send` is available |
 | Bridge changes ignored | **Restart OpenPnP** (not just the controller) |
 | Controller changes ignored | `systemctl --user restart streamdeck` or `./run` |
 
@@ -401,6 +401,51 @@ streamdeck/
 - **Single deck** — one Stream Deck per controller process.
 - **Machine-specific actuators** — vacuum keys expect `VAC1` and `VAC2` in the OpenPnP configuration.
 - **OpenPnP must be running** for machine actions; the deck still renders and locks safely when the bridge is offline.
+
+---
+
+## Releases
+
+The `.deb` is built and uploaded **only when a GitHub Release is published** — not on every push.
+
+### Publish a new version
+
+1. Update `VERSION` default in `build-deb.sh` if needed (the release workflow passes the tag).
+2. Commit and push to `main`.
+3. Create a tag matching the version, e.g. `v0.1.0`.
+4. On GitHub: **Releases → Draft a new release** → choose the tag → **Publish release**.
+5. The [Release workflow](.github/workflows/release.yml) builds `streamdeck-openpnp_<version>_all.deb` and attaches it to that release.
+
+Install from a release asset:
+
+```bash
+curl -LO https://github.com/tlf30/lumenpnp-streamdeck/releases/download/v0.1.0/streamdeck-openpnp_0.1.0_all.deb
+sudo apt install ./streamdeck-openpnp_0.1.0_all.deb
+streamdeck-setup-user
+systemctl --user enable --now streamdeck
+```
+
+### CI vs release workflows
+
+| Workflow | Trigger | Publishes `.deb`? |
+|----------|---------|-------------------|
+| [CI](.github/workflows/ci.yml) | Push / PR to `main` | No — build verification only |
+| [Release](.github/workflows/release.yml) | Release **published** | Yes — attached to the release |
+
+### GitHub Actions hardening
+
+These workflows follow supply-chain best practices:
+
+- **Pinned actions** to full commit SHAs (not floating `@v4` tags).
+- **Least-privilege `permissions`** — `contents: read` for CI; `contents: write` only on release upload.
+- **No release on PRs or tags alone** — only `release: published`.
+- **Repository guard** — release job runs only on `tlf30/lumenpnp-streamdeck`.
+- **Dependabot** weekly PRs for action updates (`.github/dependabot.yml`).
+
+Recommended repository settings (GitHub → Settings → Actions):
+
+- **Fork pull request workflows:** Do not run (prevents untrusted workflow code from accessing secrets).
+- **Workflow permissions:** Read repository contents and packages permissions (workflows elevate only where needed).
 
 ---
 

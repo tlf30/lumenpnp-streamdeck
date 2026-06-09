@@ -1,0 +1,38 @@
+# Validate .deb builds on push/PR. Does not publish artifacts.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Supply-chain hardening: default least privilege for all jobs.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install packaging tools
+        run: sudo apt-get update && sudo apt-get install -y rsync dpkg-dev
+
+      - name: Build .deb
+        run: ./build-deb.sh
+
+      - name: Verify package metadata
+        run: |
+          deb="$(ls -1 build/debian/streamdeck-openpnp_*_all.deb | head -1)"
+          test -n "$deb"
+          dpkg-deb -I "$deb" | grep -q 'Package: streamdeck-openpnp'
+          dpkg-deb -I "$deb" | grep -q 'libnotify-bin'
+          dpkg-deb -c "$deb" | grep -q './usr/bin/streamdeck-run'
+          echo "Built: $deb ($(du -h "$deb" | cut -f1))"
