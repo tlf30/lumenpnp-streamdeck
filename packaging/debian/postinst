@@ -1,0 +1,32 @@
+#!/bin/sh
+set -e
+
+INSTALL_ROOT="/usr/lib/streamdeck"
+
+case "$1" in
+  configure)
+    if ! dpkg-query -W -f='${Status}' python3-venv 2>/dev/null | grep -q "install ok installed"; then
+      echo "python3-venv is required but was not installed." >&2
+      exit 1
+    fi
+
+    if [ ! -d "${INSTALL_ROOT}/.venv" ]; then
+      python3 -m venv "${INSTALL_ROOT}/.venv"
+    fi
+    "${INSTALL_ROOT}/.venv/bin/pip" install --upgrade pip
+    "${INSTALL_ROOT}/.venv/bin/pip" install -r "${INSTALL_ROOT}/requirements.txt"
+
+    udevadm control --reload-rules 2>/dev/null || true
+    udevadm trigger 2>/dev/null || true
+
+    echo
+    echo "Stream Deck OpenPnP installed."
+    echo "Each user who runs OpenPnP should run:"
+    echo "  streamdeck-setup-user"
+    echo "Then enable the service:"
+    echo "  systemctl --user enable --now streamdeck"
+    echo
+    ;;
+esac
+
+exit 0

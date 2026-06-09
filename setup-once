@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# One-time system setup (requires sudo for USB access).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "==> Installing apt packages"
+sudo apt-get update
+sudo apt-get install -y libhidapi-libusb0 python3-venv python3-pip
+
+echo "==> Installing udev rule"
+sudo tee /etc/udev/rules.d/70-streamdeck.rules >/dev/null <<'EOF'
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0fd9", TAG+="uaccess", GROUP="plugdev", MODE="0660"
+EOF
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+echo "==> Python venv + dependencies"
+cd "$ROOT"
+python3 -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
+
+echo "==> User config"
+"$ROOT/.venv/bin/python" - <<'PY'
+from streamdeck_app.config import ensure_user_config
+path = ensure_user_config()
+print(f"  {path}")
+PY
+
+echo "==> Linking OpenPnP bridge (symlink — edits reload on OpenPnP restart)"
+mkdir -p "$HOME/.openpnp2/scripts/Events"
+ln -sfn "$ROOT/openpnp/bridge.py" "$HOME/.openpnp2/scripts/Events/Startup.py"
+
+echo "==> CLI on PATH"
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$ROOT/bin/openpnpctl" "$HOME/.local/bin/openpnpctl"
+ln -sfn "$ROOT/run" "$HOME/.local/bin/streamdeck-run"
+ln -sfn "$ROOT/test-bridge" "$HOME/.local/bin/streamdeck-test-bridge"
+chmod +x "$ROOT/run" "$ROOT/test-bridge" "$ROOT/bin/openpnpctl"
+
+echo
+echo "Done. Next:"
+echo "  1. Replug Stream Deck (or log out/in) after udev rule"
+echo "  2. Restart OpenPnP to load the bridge"
+echo "  3. streamdeck-test-bridge"
+echo "  4. streamdeck-run"

@@ -1,0 +1,22 @@
+# Development overrides. User settings: ~/.config/streamdeck/config.yaml
+notifications_enabled: true
+
+bridge_host: 127.0.0.1
+bridge_port: 64738
+jog_step_mm: 1.0
+poll_interval_ms: 250
+event_poll_interval_ms: 16
+dial_jog_coalesce_ms: 30
+deck_poll_hz: 60
+vacuum_poll_interval_ms: 1000
+brightness: 60
+default_locked: true
+lock_idle_timeout_sec: 120
+lock_idle_warning_sec: 10
+dial_default_step_mm: 1.0
+dial_xy_default_step_mm: 10.0
+dial_step_sizes_mm: [1.0, 0.1, 0.01]
+dial_xy_step_sizes_mm: [10.0, 1.0, 0.1, 0.01]
+jog_increment_dial_index: 4
+speed_dial_index: 5
+dial_unlock_timeout_sec: 10

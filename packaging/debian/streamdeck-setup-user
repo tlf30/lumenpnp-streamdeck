@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Per-user setup: OpenPnP bridge symlink and default config.
+set -euo pipefail
+
+INSTALL_ROOT="${STREAMDECK_INSTALL_ROOT:-/usr/lib/streamdeck}"
+OPENPNP_EVENTS="${HOME}/.openpnp2/scripts/Events"
+USER_CONFIG="${HOME}/.config/streamdeck/config.yaml"
+EXAMPLE_CONFIG="/usr/share/streamdeck/config.yaml.example"
+
+mkdir -p "${OPENPNP_EVENTS}"
+ln -sfn "${INSTALL_ROOT}/openpnp/bridge.py" "${OPENPNP_EVENTS}/Startup.py"
+
+mkdir -p "$(dirname "${USER_CONFIG}")"
+if [ ! -f "${USER_CONFIG}" ]; then
+  if [ -f "${EXAMPLE_CONFIG}" ]; then
+    cp "${EXAMPLE_CONFIG}" "${USER_CONFIG}"
+    echo "Created ${USER_CONFIG}"
+  else
+    cat >"${USER_CONFIG}" <<'EOF'
+notifications_enabled: true
+lock_idle_timeout_sec: 120
+lock_idle_warning_sec: 10
+EOF
+    echo "Created ${USER_CONFIG} (minimal defaults)"
+  fi
+else
+  echo "Config already exists: ${USER_CONFIG}"
+fi
+
+echo
+echo "OpenPnP bridge linked:"
+echo "  ${OPENPNP_EVENTS}/Startup.py -> ${INSTALL_ROOT}/openpnp/bridge.py"
+echo
+echo "Next:"
+echo "  1. Restart OpenPnP to load the bridge"
+echo "  2. systemctl --user enable --now streamdeck"
+echo "  3. streamdeck-test-bridge"

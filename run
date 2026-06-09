@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Start (or restart) the Stream Deck controller from source.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+if ! compgen -G "/etc/udev/rules.d/*streamdeck*" >/dev/null && \
+   ! grep -qs '0fd9' /etc/udev/rules.d/*.rules 2>/dev/null; then
+  echo "Missing udev rule for Stream Deck USB access."
+  echo "Run: $ROOT/setup-once   (or replug the deck after installing the rule)"
+  exit 1
+fi
+
+for hid in /dev/hidraw*; do
+  if udevadm info -a -n "$hid" 2>/dev/null | grep -q 'ATTRS{idVendor}=="0fd9"'; then
+    if [ ! -r "$hid" ] || [ ! -w "$hid" ]; then
+      echo "Cannot access $hid (Stream Deck) — update udev rule and replug the deck:"
+      echo "  ./setup-once"
+      exit 1
+    fi
+    break
+  fi
+done
+
+pkill -f "[p]ython -m streamdeck_app.controller" 2>/dev/null || true
+sleep 0.2
+exec "$ROOT/.venv/bin/python" -m streamdeck_app.controller

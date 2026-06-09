@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|upgrade|deconfigure)
+    pkill -f "[p]ython -m streamdeck_app.controller" 2>/dev/null || true
+    ;;
+esac
+
+exit 0

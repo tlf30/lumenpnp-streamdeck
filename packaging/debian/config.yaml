@@ -1,0 +1,11 @@
+# System-wide defaults (override in ~/.config/streamdeck/config.yaml).
+notifications_enabled: true
+default_locked: true
+lock_idle_timeout_sec: 120
+lock_idle_warning_sec: 10
+bridge_host: 127.0.0.1
+bridge_port: 64738
+brightness: 60
+poll_interval_ms: 250
+event_poll_interval_ms: 16
+deck_input_timeout_ms: 50

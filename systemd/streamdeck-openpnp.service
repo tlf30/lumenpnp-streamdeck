@@ -1,0 +1,14 @@
+[Unit]
+Description=Stream Deck OpenPnP controller
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=@PROJECT_ROOT@
+ExecStart=@PROJECT_ROOT@/.venv/bin/python -m streamdeck_app.controller
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

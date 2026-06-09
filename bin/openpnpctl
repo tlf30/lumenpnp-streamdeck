@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""CLI client for the OpenPnP Stream Deck bridge."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import socket
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from streamdeck_app.bridge_config import load_bridge_endpoint  # noqa: E402
+
+
+def send_command(host: str, port: int, command: str, timeout: float = 2.0) -> dict:
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client.settimeout(timeout)
+        client.connect((host, port))
+        client.sendall((command.strip() + "\n").encode("utf-8"))
+        data = b""
+        while b"\n" not in data:
+            chunk = client.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+        if not data:
+            raise SystemExit(
+                f"OpenPnP bridge not responding at {host}:{port}. Is OpenPnP running?"
+            )
+        line = data.split(b"\n", 1)[0].decode("utf-8")
+        return json.loads(line)
+    except ConnectionRefusedError:
+        raise SystemExit(
+            f"OpenPnP bridge not running at {host}:{port}. Restart OpenPnP after bridge changes."
+        )
+    finally:
+        client.close()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Control OpenPnP via the Stream Deck bridge")
+    parser.add_argument("--host", help="Bridge host (default: from config)")
+    parser.add_argument("--port", type=int, help="Bridge port (default: from config)")
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("ping", help="Check bridge connectivity")
+    subparsers.add_parser("home", help="Home the machine")
+    subparsers.add_parser("park", help="Park XY (alias)")
+    subparsers.add_parser("park-xy", help="Park XY")
+    subparsers.add_parser("park-z", help="Park Z to safe Z")
+    subparsers.add_parser("park-c", help="Park nozzle rotation")
+    subparsers.add_parser("position", help="Print current X/Y/Z/C position as JSON")
+    subparsers.add_parser("cycle-tool", help="Cycle N1 / N2 / camera selection")
+    subparsers.add_parser("toggle-job", help="Start / pause / resume the job")
+    subparsers.add_parser("step-job", help="Step the job")
+    subparsers.add_parser(
+        "move-camera-to-tool", help="Move camera to the selected tool position"
+    )
+    subparsers.add_parser(
+        "move-tool-to-camera", help="Move selected tool to the camera position"
+    )
+
+    jog_parser = subparsers.add_parser("jog", help="Jog along an axis")
+    jog_parser.add_argument("axis", choices=["x", "y", "z", "c", "X", "Y", "Z", "C"])
+    jog_parser.add_argument("mm", type=float, help="Distance in millimeters")
+
+    toggle_parser = subparsers.add_parser("toggle-actuator", help="Toggle a vacuum/actuator")
+    toggle_parser.add_argument("name", help="Actuator name, e.g. VAC1")
+
+    set_parser = subparsers.add_parser("set-actuator", help="Set actuator on or off")
+    set_parser.add_argument("name", help="Actuator name, e.g. VAC1")
+    set_parser.add_argument("state", choices=["on", "off", "ON", "OFF"])
+
+    read_parser = subparsers.add_parser("read-actuator", help="Read vacuum sensor via actuator")
+    read_parser.add_argument("name", help="Actuator name, e.g. VAC1")
+
+    args = parser.parse_args()
+
+    host, port = load_bridge_endpoint()
+    if args.host:
+        host = args.host
+    if args.port:
+        port = args.port
+
+    if args.command == "ping":
+        cmd = "PING"
+    elif args.command == "home":
+        cmd = "HOME"
+    elif args.command in ("park", "park-xy"):
+        cmd = "PARK_XY"
+    elif args.command == "park-z":
+        cmd = "PARK_Z"
+    elif args.command == "park-c":
+        cmd = "PARK_C"
+    elif args.command == "position":
+        cmd = "GET_POSITION"
+    elif args.command == "cycle-tool":
+        cmd = "CYCLE_TOOL"
+    elif args.command == "toggle-job":
+        cmd = "TOGGLE_JOB"
+    elif args.command == "step-job":
+        cmd = "STEP_JOB"
+    elif args.command == "move-camera-to-tool":
+        cmd = "MOVE_CAMERA_TO_TOOL"
+    elif args.command == "move-tool-to-camera":
+        cmd = "MOVE_TOOL_TO_CAMERA"
+    elif args.command == "jog":
+        cmd = f"JOG {args.axis.upper()} {args.mm}"
+    elif args.command == "toggle-actuator":
+        cmd = f"TOGGLE_ACTUATOR {args.name}"
+    elif args.command == "set-actuator":
+        cmd = f"SET_ACTUATOR {args.name} {args.state.upper()}"
+    elif args.command == "read-actuator":
+        cmd = f"READ_ACTUATOR {args.name}"
+    else:
+        raise SystemExit(f"Unknown command: {args.command}")
+
+    timeout = 20.0 if args.command == "read-actuator" else 2.0
+    result = send_command(host, port, cmd, timeout=timeout)
+    if args.command == "position":
+        print(json.dumps(result, indent=2))
+    else:
+        print(json.dumps(result))
+
+    if not result.get("ok"):
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
