@@ -1,0 +1,28 @@
+# User settings for the Stream Deck OpenPnP controller.
+# Installed copy: ~/.config/streamdeck/config.yaml
+# Edit this file, then restart the controller (systemctl --user restart streamdeck).
+
+# Desktop notifications (notify-send). Set false to silence popups.
+notifications_enabled: true
+
+# Start with machine controls locked until UNLOCK is pressed.
+default_locked: true
+
+# Auto-lock after this many seconds without input (0 = disabled).
+lock_idle_timeout_sec: 120
+
+# Flash UNLOCK this many seconds before auto-lock.
+lock_idle_warning_sec: 10
+
+# OpenPnP bridge (usually written by Startup.py when OpenPnP starts).
+bridge_host: 127.0.0.1
+bridge_port: 64738
+
+# Deck display brightness (0–100).
+brightness: 60
+
+# Default jog step when syncing from OpenPnP.
+jog_step_mm: 1.0
+
+# How often the controller polls OpenPnP for machine state (milliseconds).
+poll_interval_ms: 250

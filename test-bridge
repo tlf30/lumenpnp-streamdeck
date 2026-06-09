@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Quick smoke tests for the OpenPnP bridge (safe read-only + ping).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+CTL="$ROOT/bin/openpnpctl"
+
+echo "==> ping"
+"$CTL" ping
+
+echo "==> position"
+"$CTL" position
+
+echo "Bridge OK at $(cat ~/.openpnp2/openpnp-bridge.json 2>/dev/null || echo 'unknown')"

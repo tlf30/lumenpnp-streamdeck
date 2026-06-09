@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PYTHONPATH="/usr/lib/streamdeck${PYTHONPATH:+:${PYTHONPATH}}"
+exec /usr/lib/streamdeck/.venv/bin/python /usr/lib/streamdeck/bin/openpnpctl "$@"

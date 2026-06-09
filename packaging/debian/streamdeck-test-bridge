@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CTL="/usr/bin/openpnpctl"
+
+echo "==> ping"
+"${CTL}" ping
+
+echo "==> position"
+"${CTL}" position
+
+echo "Bridge OK at $(cat "${HOME}/.openpnp2/openpnp-bridge.json" 2>/dev/null || echo 'unknown')"

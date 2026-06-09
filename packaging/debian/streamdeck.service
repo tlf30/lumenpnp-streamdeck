@@ -1,0 +1,16 @@
+[Unit]
+Description=Stream Deck OpenPnP Controller
+Documentation=file:/usr/share/doc/streamdeck-openpnp/README.md
+After=graphical-session.target
+ConditionPathExists=/usr/lib/streamdeck/.venv/bin/python
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/lib/streamdeck
+Environment=PYTHONPATH=/usr/lib/streamdeck
+ExecStart=/usr/lib/streamdeck/.venv/bin/python -m streamdeck_app.controller
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

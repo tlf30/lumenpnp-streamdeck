@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Press each key to see its index flash on the button. Ctrl+C to quit."""
+from __future__ import annotations
+
+import sys
+import time
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+import streamdeck_app.patch_streamdeck  # noqa: F401
+from StreamDeck.DeviceManager import DeviceManager
+from StreamDeck.ImageHelpers import PILHelper
+
+
+def main() -> None:
+    decks = DeviceManager().enumerate()
+    if not decks:
+        raise SystemExit("No Stream Deck found")
+    deck = decks[0]
+    deck.open()
+    deck.reset()
+    deck.set_brightness(60)
+
+    blank = PILHelper.to_native_key_format(
+        deck, PILHelper.create_key_image(deck, "#161a22")
+    )
+    for i in range(deck.key_count()):
+        deck.set_key_image(i, blank)
+
+    def on_key(d, key: int, state: bool) -> None:
+        if not state:
+            deck.set_key_image(key, blank)
+            return
+        img = PILHelper.create_key_image(deck, "#2d6cdf")
+        draw = ImageDraw.Draw(img)
+        draw.text((20, 40), str(key), fill="white")
+        deck.set_key_image(key, PILHelper.to_native_key_format(deck, img))
+        print(f"key pressed: {key}")
+        sys.stdout.flush()
+
+    deck.set_key_callback(on_key)
+    print(f"Connected: {deck.deck_type()} ({deck.key_count()} keys). Press keys...")
+    try:
+        while deck.is_open():
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        deck.reset()
+        deck.close()
+
+
+if __name__ == "__main__":
+    main()

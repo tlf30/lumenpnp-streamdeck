@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Packaging / build
+build/
+*.deb
+*.ddeb
+*.changes
+*.buildinfo
+*.tar.gz
+
+# Testing / type checking / lint
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# Local overrides (user config lives in ~/.config/streamdeck/)
+.env
+.env.*
+local.config.yaml
+
+# Logs (runtime; OpenPnP also writes under ~/.openpnp2/log/)
+*.log
